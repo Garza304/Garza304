@@ -8,6 +8,8 @@ also type. Each entry is saved to a journal you can search, filter by tag, edit,
 
 ## Features
 
+- **App icon**: the "crescent clock", a dreamcatcher hoop that is half crescent moon and half clock face, with a web,
+  clock hands and three feathers. It has a one-color version for Android 13+ themed icons.
 - **Alarms**: one-time or repeating on chosen weekdays, with labels, vibration, a 9-minute snooze, and a sound that
   fades in gently. Alarms survive reboots and time-zone changes, and a ringing alarm stops on its own after 10 minutes.
 - **Wake-up capture**: stopping the alarm opens the dream screen with voice dictation already running. Two styles,

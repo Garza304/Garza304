@@ -2,4 +2,5 @@
 <resources>
     <color name="night">#FF0F1028</color>
     <color name="moon">#FFF3E9C6</color>
+    <color name="dusk">#FFB9A7FF</color>
 </resources>

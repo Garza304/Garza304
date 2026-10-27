@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One-color version of ic_launcher_foreground for themed icons (Android 13+). The system tints
+    everything drawn here, so the background-colored cutouts (quills, the ring around the hub)
+    are left out.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group>
+        <clip-path android:pathData="M54,23 A20,20 0 1,1 54,63 A20,20 0 1,1 54,23 Z" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.1"
+            android:pathData="M54,43 L54,22 M54,43 L68.85,28.15 M54,43 L75,43 M54,43 L68.85,57.85 M54,43 L54,64 M54,43 L39.15,57.85 M54,43 L33,43 M54,43 L39.15,28.15" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.1"
+            android:strokeLineJoin="round"
+            android:pathData="M54,31.5 L62.13,34.87 L65.5,43 L62.13,51.13 L54,54.5 L45.87,51.13 L42.5,43 L45.87,34.87 Z" />
+    </group>
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,20.75 A22.25,22.25 0 0,0 54,65.25 L54,62.75 A20.81,20.81 0 0,1 54,23.25 Z" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M54,22 A21,21 0 0,1 54,64" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M60.95,28.71 a1.3,1.3 0 1,0 2.6,0 a1.3,1.3 0 1,0 -2.6,0 M66.99,34.75 a1.3,1.3 0 1,0 2.6,0 a1.3,1.3 0 1,0 -2.6,0 M68.7,43 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0 M66.99,51.25 a1.3,1.3 0 1,0 2.6,0 a1.3,1.3 0 1,0 -2.6,0 M60.95,57.29 a1.3,1.3 0 1,0 2.6,0 a1.3,1.3 0 1,0 -2.6,0" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,43 L54,30 M54,43 L49.5,50.79" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M51.6,43 a2.4,2.4 0 1,0 4.8,0 a2.4,2.4 0 1,0 -4.8,0" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.3"
+        android:strokeLineCap="round"
+        android:pathData="M46.82,62.73 L46.82,67.7 M54,64 L54,71 M61.18,62.73 L61.18,67.7" />
+    <group
+        android:pivotX="46.82"
+        android:pivotY="67.7"
+        android:rotation="10">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M46.82,67.7 C49.6,70.5 49.6,75.9 46.82,78.7 C44,75.9 44,70.5 46.82,67.7 Z" />
+    </group>
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,71 C57.4,74.3 57.4,80.7 54,84 C50.6,80.7 50.6,74.3 54,71 Z" />
+    <group
+        android:pivotX="61.18"
+        android:pivotY="67.7"
+        android:rotation="-10">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M61.18,67.7 C64,70.5 64,75.9 61.18,78.7 C58.4,75.9 58.4,70.5 61.18,67.7 Z" />
+    </group>
+</vector>
