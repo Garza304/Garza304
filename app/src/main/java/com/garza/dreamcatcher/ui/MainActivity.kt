@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -70,6 +71,7 @@ private fun MainScreen() {
 
     var tab by rememberSaveable { mutableIntStateOf(Tab.Journal.ordinal) }
     var editor by remember { mutableStateOf<AlarmEditor?>(null) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     val currentTab = Tab.entries[tab]
 
     Scaffold(
@@ -94,6 +96,9 @@ private fun MainScreen() {
                         }) {
                             Icon(Icons.Filled.Share, contentDescription = "Export journal")
                         }
+                    }
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
@@ -135,10 +140,12 @@ private fun MainScreen() {
                 val dreams by journal.dreams.collectAsStateWithLifecycle()
                 val query by journal.query.collectAsStateWithLifecycle()
                 val tagFilter by journal.tagFilter.collectAsStateWithLifecycle()
+                val customTags by journal.customTags.collectAsStateWithLifecycle()
                 JournalScreen(
                     dreams = dreams,
                     query = query,
                     onQueryChange = { journal.query.value = it },
+                    customTags = customTags,
                     tagFilter = tagFilter,
                     onTagFilterChange = { journal.tagFilter.value = it },
                     onOpen = { context.startActivity(DreamEntryActivity.editIntent(context, it.id)) },
@@ -156,6 +163,8 @@ private fun MainScreen() {
             }
         }
     }
+
+    if (showSettings) SettingsDialog(onDismiss = { showSettings = false })
 
     editor?.let { current ->
         // Fresh dialog state for each alarm opened.

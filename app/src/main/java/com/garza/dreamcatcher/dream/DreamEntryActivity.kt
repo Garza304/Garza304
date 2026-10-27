@@ -40,6 +40,8 @@ open class DreamEntryActivity : ComponentActivity() {
     private var listening by mutableStateOf(false)
     private var partial by mutableStateOf("")
     private var message by mutableStateOf<String?>(null)
+    /** Set by "Type instead" so the review screen opens with the keyboard up. */
+    private var focusText by mutableStateOf(false)
 
     private val micPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) dictation.start() else message = "Microphone access was denied. You can type your dream instead."
@@ -59,7 +61,12 @@ open class DreamEntryActivity : ComponentActivity() {
             override fun onError(message: String) { this@DreamEntryActivity.message = message }
         })
 
-        if (intent.getBooleanExtra(EXTRA_AUTO_LISTEN, false) && savedInstanceState == null) {
+        // Without speech recognition, the listening screen has nothing to offer.
+        if (!dictation.isAvailable && viewModel.stage.value == EntryStage.LISTEN) viewModel.goToReview()
+
+        if (intent.getBooleanExtra(EXTRA_AUTO_LISTEN, false) && savedInstanceState == null &&
+            viewModel.stage.value != EntryStage.REVIEW
+        ) {
             // Give a ringing alarm a moment to stop so the microphone doesn't hear it.
             lifecycleScope.launch {
                 delay(600)
@@ -69,25 +76,95 @@ open class DreamEntryActivity : ComponentActivity() {
 
         setContent {
             DreamcatcherTheme {
+                val stage by viewModel.stage.collectAsStateWithLifecycle()
                 val text by viewModel.text.collectAsStateWithLifecycle()
-                val tags by viewModel.tags.collectAsStateWithLifecycle()
                 val createdAt by viewModel.createdAt.collectAsStateWithLifecycle()
+                val customTags by viewModel.customTags.collectAsStateWithLifecycle()
                 BackHandler(onBack = ::saveAndClose)
-                DreamEntryScreen(
-                    isNew = viewModel.isNew,
-                    createdAt = createdAt,
-                    text = text,
-                    onTextChange = viewModel::setText,
-                    partial = partial,
-                    tags = tags,
-                    onToggleTag = viewModel::toggleTag,
-                    listening = listening,
-                    voiceAvailable = dictation.isAvailable,
-                    message = message,
-                    onToggleMic = { if (listening) dictation.stop() else startDictation() },
-                    onSave = ::saveAndClose,
-                    onDelete = { viewModel.delete(::finish) },
-                )
+                when (stage) {
+                    EntryStage.LISTEN -> ListeningScreen(
+                        text = text,
+                        partial = partial,
+                        listening = listening,
+                        message = message,
+                        onToggleMic = { if (listening) dictation.stop() else startDictation() },
+                        onTypeInstead = {
+                            dictation.stop()
+                            focusText = true
+                            viewModel.goToReview()
+                        },
+                        onDone = {
+                            dictation.stop()
+                            viewModel.goToReview()
+                        },
+                        onClose = ::saveAndClose,
+                    )
+                    EntryStage.GUIDED -> {
+                        val who by viewModel.who.collectAsStateWithLifecycle()
+                        val where by viewModel.where.collectAsStateWithLifecycle()
+                        val activeField by viewModel.activeField.collectAsStateWithLifecycle()
+                        GuidedScreen(
+                            createdAt = createdAt,
+                            what = text,
+                            onWhatChange = viewModel::setText,
+                            who = who,
+                            onWhoChange = viewModel::setWho,
+                            where = where,
+                            onWhereChange = viewModel::setWhere,
+                            activeField = activeField,
+                            listening = listening,
+                            partial = partial,
+                            voiceAvailable = dictation.isAvailable,
+                            customTags = customTags,
+                            onToggleFeeling = viewModel::toggleCustomTag,
+                            message = message,
+                            onMic = { field ->
+                                if (listening && activeField == field) {
+                                    dictation.stop()
+                                } else {
+                                    // Switching questions keeps the mic on and sends new words to the new one.
+                                    viewModel.setActiveField(field)
+                                    if (!listening) startDictation()
+                                }
+                            },
+                            onDontRemember = {
+                                dictation.stop()
+                                viewModel.rememberedNothing()
+                            },
+                            onNext = {
+                                dictation.stop()
+                                viewModel.goToReview()
+                            },
+                            onClose = ::saveAndClose,
+                        )
+                    }
+                    EntryStage.REVIEW -> {
+                        val tags by viewModel.tags.collectAsStateWithLifecycle()
+                        val available by viewModel.availableCustomTags.collectAsStateWithLifecycle()
+                        ReviewScreen(
+                            isNew = viewModel.isNew,
+                            createdAt = createdAt,
+                            text = text,
+                            onTextChange = viewModel::setText,
+                            focusText = focusText,
+                            onFocusHandled = { focusText = false },
+                            tags = tags,
+                            onToggleTag = viewModel::toggleTag,
+                            customTags = customTags,
+                            availableCustomTags = available,
+                            onToggleCustomTag = viewModel::toggleCustomTag,
+                            onAddCustomTag = viewModel::addCustomTag,
+                            voiceAvailable = dictation.isAvailable,
+                            onKeepTalking = {
+                                viewModel.goToListen()
+                                startDictation()
+                            },
+                            onSave = ::saveAndClose,
+                            onDelete = { viewModel.delete(::finish) },
+                            onClose = ::saveAndClose,
+                        )
+                    }
+                }
             }
         }
     }
@@ -106,7 +183,7 @@ open class DreamEntryActivity : ComponentActivity() {
     private fun saveAndClose() {
         dictation.stop()
         viewModel.saveAndThen { saved ->
-            if (saved && viewModel.fromAlarm) {
+            if (saved && (viewModel.fromAlarm || overLockScreen)) {
                 Toast.makeText(this, "Dream saved", Toast.LENGTH_SHORT).show()
             }
             finish()

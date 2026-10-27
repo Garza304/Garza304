@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +39,9 @@ import androidx.compose.ui.unit.dp
 import com.garza.dreamcatcher.data.Dream
 import com.garza.dreamcatcher.data.DreamTag
 import com.garza.dreamcatcher.dream.DreamText
-import com.garza.dreamcatcher.ui.TagChipRow
+import com.garza.dreamcatcher.ui.ChipRow
+import com.garza.dreamcatcher.ui.ChipSpec
+import com.garza.dreamcatcher.ui.CustomTagIcon
 import com.garza.dreamcatcher.ui.icon
 import com.garza.dreamcatcher.ui.theme.Moon
 
@@ -45,8 +50,9 @@ fun JournalScreen(
     dreams: List<Dream>?,
     query: String,
     onQueryChange: (String) -> Unit,
-    tagFilter: DreamTag?,
-    onTagFilterChange: (DreamTag?) -> Unit,
+    customTags: List<String>,
+    tagFilter: TagFilter?,
+    onTagFilterChange: (TagFilter?) -> Unit,
     onOpen: (Dream) -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -79,10 +85,12 @@ fun JournalScreen(
             )
         }
         item {
-            TagChipRow(
-                isSelected = { it == tagFilter },
-                // Tapping the active filter again shows everything.
-                onClick = { onTagFilterChange(if (it == tagFilter) null else it) },
+            // Tapping the active filter again shows everything.
+            fun spec(filter: TagFilter, label: String, icon: ImageVector) =
+                ChipSpec(label, icon, filter == tagFilter) { onTagFilterChange(if (filter == tagFilter) null else filter) }
+            ChipRow(
+                DreamTag.entries.map { spec(TagFilter.BuiltIn(it), it.label, it.icon) } +
+                    customTags.map { spec(TagFilter.Custom(it), it, CustomTagIcon) }
             )
         }
         when {
@@ -100,6 +108,7 @@ fun JournalScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DreamCard(dream: Dream, onClick: () -> Unit) {
     Card(
@@ -136,19 +145,26 @@ private fun DreamCard(dream: Dream, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            if (dream.tags.isNotEmpty()) {
+            if (dream.tags.isNotEmpty() || dream.customTags.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    DreamTag.entries.filter { it in dream.tags }.forEach { tag ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(tag.icon, contentDescription = null, tint = Moon, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(tag.label, style = MaterialTheme.typography.labelMedium, color = Moon)
-                        }
-                    }
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    DreamTag.entries.filter { it in dream.tags }.forEach { tag -> TagLabel(tag.label, tag.icon) }
+                    dream.customTags.forEach { TagLabel(it, CustomTagIcon) }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TagLabel(label: String, icon: ImageVector) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = Moon, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(4.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, color = Moon)
     }
 }
 

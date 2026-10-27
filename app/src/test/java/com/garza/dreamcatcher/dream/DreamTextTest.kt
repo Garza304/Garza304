@@ -46,16 +46,39 @@ class DreamTextTest {
     }
 
     @Test
+    fun searchAlsoMatchesTags() {
+        val dream = Dream(text = "A long hallway", createdAt = 0, tags = setOf(DreamTag.NIGHTMARE), customTags = setOf("Falling"))
+        assertTrue(DreamText.matches(dream, "falling"))
+        assertTrue(DreamText.matches(dream, "nightmare hallway"))
+        assertFalse(DreamText.matches(dream, "lucid"))
+    }
+
+    @Test
+    fun composeGuidedJoinsAnswersAndSkipsBlanks() {
+        assertEquals(
+            "We missed the ferry.\n\nWho was there: My brother\nWhere: Grandmother's house",
+            DreamText.composeGuided(" We missed the ferry. ", "My brother", "Grandmother's house"),
+        )
+        assertEquals("Where: A beach", DreamText.composeGuided("", " ", "A beach"))
+        assertEquals("", DreamText.composeGuided("", "", ""))
+    }
+
+    @Test
     fun exportIsOldestFirstWithTags() {
         val zone = ZoneId.of("UTC")
         fun millis(day: Int) = ZonedDateTime.of(2026, 10, day, 7, 0, 0, 0, zone).toInstant().toEpochMilli()
         val dreams = listOf(
-            Dream(text = "Second ", createdAt = millis(27), tags = setOf(DreamTag.RECURRING, DreamTag.DREAM)),
+            Dream(
+                text = "Second ",
+                createdAt = millis(27),
+                tags = setOf(DreamTag.RECURRING, DreamTag.DREAM),
+                customTags = setOf("Flying"),
+            ),
             Dream(text = "First", createdAt = millis(26)),
             Dream(text = "", createdAt = millis(28), tags = setOf(DreamTag.NO_DREAM)),
         )
         val expected = "Monday, October 26, 2026 · 7:00 AM\nFirst\n\n" +
-            "Tuesday, October 27, 2026 · 7:00 AM · Dream, Recurring\nSecond\n\n" +
+            "Tuesday, October 27, 2026 · 7:00 AM · Dream, Recurring, Flying\nSecond\n\n" +
             "Wednesday, October 28, 2026 · 7:00 AM · No dream"
         val actual = DreamText.export(dreams, zone, Locale.US)
         // JDKs differ on whether the space before AM is narrow ( ); compare with it normalized.

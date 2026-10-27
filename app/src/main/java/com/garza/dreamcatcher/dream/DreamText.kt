@@ -35,8 +35,27 @@ object DreamText {
         return DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(date)
     }
 
-    fun matches(dream: Dream, query: String): Boolean =
-        query.isBlank() || query.trim().split(Regex("\\s+")).all { dream.text.contains(it, ignoreCase = true) }
+    /** Built-in tag labels followed by custom tags, in display order. */
+    fun tagLabels(dream: Dream): List<String> =
+        DreamTag.entries.filter { it in dream.tags }.map { it.label } + dream.customTags
+
+    /** True when every word of [query] appears in the dream's text or tags. */
+    fun matches(dream: Dream, query: String): Boolean {
+        if (query.isBlank()) return true
+        val haystack = dream.text + "\n" + tagLabels(dream).joinToString("\n")
+        return query.trim().split(Regex("\\s+")).all { haystack.contains(it, ignoreCase = true) }
+    }
+
+    /** Joins the guided questions' answers into one entry; blank answers are left out. */
+    fun composeGuided(whatHappened: String, who: String, where: String): String =
+        buildList {
+            whatHappened.trim().takeIf { it.isNotEmpty() }?.let(::add)
+            val details = buildList {
+                who.trim().takeIf { it.isNotEmpty() }?.let { add("Who was there: $it") }
+                where.trim().takeIf { it.isNotEmpty() }?.let { add("Where: $it") }
+            }
+            if (details.isNotEmpty()) add(details.joinToString("\n"))
+        }.joinToString("\n\n")
 
     /** The whole journal as plain text, oldest first, for sharing or backing up. */
     fun export(dreams: List<Dream>, zone: ZoneId = ZoneId.systemDefault(), locale: Locale = Locale.getDefault()): String =
@@ -45,9 +64,10 @@ object DreamText {
                 append(formatDate(dream.createdAt, zone, locale))
                 append(" · ")
                 append(formatTime(dream.createdAt, zone, locale))
-                if (dream.tags.isNotEmpty()) {
+                val labels = tagLabels(dream)
+                if (labels.isNotEmpty()) {
                     append(" · ")
-                    append(DreamTag.entries.filter { it in dream.tags }.joinToString(", ") { it.label })
+                    append(labels.joinToString(", "))
                 }
                 if (dream.text.isNotBlank()) {
                     append('\n')

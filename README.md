@@ -10,11 +10,18 @@ also type. Each entry is saved to a journal you can search, filter by tag, edit,
 
 - **Alarms**: one-time or repeating on chosen weekdays, with labels, vibration, a 9-minute snooze, and a sound that
   fades in gently. Alarms survive reboots and time-zone changes, and a ringing alarm stops on its own after 10 minutes.
-- **Wake-up capture**: stopping the alarm opens the dream screen with voice dictation already running. The text appears
-  as you talk. Entries save automatically, even if the screen turns off.
+- **Wake-up capture**: stopping the alarm opens the dream screen with voice dictation already running. Two styles,
+  switchable in Settings (gear icon):
+  - **Voice first** (default): a nearly empty screen with a big mic. Your words appear in large type as you talk. Tap
+    **I'm done** to review the text and tag it.
+  - **Guided questions**: prompts for *What happened?*, *Who was there?*, *Where were you?* and *How did it feel?*,
+    each with its own mic. The answers are combined into one entry.
+
+  Entries save automatically, even if the screen turns off.
 - **Tags**: mark each night as **Dream**, **Nightmare** or **No dream** (pick one), and add **Lucid** or
-  **Recurring** to a remembered dream. A **No dream** entry can be saved with no text, so nights you don't remember
-  still count.
+  **Recurring** to a remembered dream. **+ New tag** makes your own tags (feelings, themes, sleep notes). They're
+  offered on every entry after that, most used first. A **No dream** entry can be saved with no text, so nights you
+  don't remember still count.
 - **Woke up before the alarm?** Start a recording from the lock screen without unlocking. Use the **Record dream**
   Quick Settings tile, or turn on the silent lock screen shortcut notification. Both are set up from the card at the
   bottom of the Alarms tab.

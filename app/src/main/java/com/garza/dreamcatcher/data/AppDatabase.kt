@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Dream::class, Alarm::class], version = 2)
+@Database(entities = [Dream::class, Alarm::class], version = 3)
 @TypeConverters(DreamTagConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dreamDao(): DreamDao
@@ -39,13 +39,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 3 added user-made tags. */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE dreams ADD COLUMN customTags TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "dreamcatcher.db",
-                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
             }
     }
 }

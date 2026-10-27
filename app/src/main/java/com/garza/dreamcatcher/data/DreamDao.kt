@@ -15,6 +15,10 @@ interface DreamDao {
     @Query("SELECT * FROM dreams ORDER BY createdAt DESC")
     suspend fun getAll(): List<Dream>
 
+    /** Each dream's encoded custom tags, for [CustomTags.rank]. */
+    @Query("SELECT customTags FROM dreams WHERE customTags != ''")
+    fun observeCustomTagRows(): Flow<List<String>>
+
     @Query("SELECT * FROM dreams WHERE id = :id")
     suspend fun get(id: Long): Dream?
 

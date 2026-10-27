@@ -42,4 +42,10 @@ class DreamTagConverters {
 
     @TypeConverter
     fun toTags(value: String): Set<DreamTag> = DreamTag.decode(value)
+
+    @TypeConverter
+    fun fromCustomTags(tags: Set<String>): String = CustomTags.encode(tags)
+
+    @TypeConverter
+    fun toCustomTags(value: String): Set<String> = CustomTags.decode(value)
 }
