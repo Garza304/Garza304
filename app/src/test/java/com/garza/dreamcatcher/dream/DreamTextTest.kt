@@ -1,6 +1,7 @@
 package com.garza.dreamcatcher.dream
 
 import com.garza.dreamcatcher.data.Dream
+import com.garza.dreamcatcher.data.DreamTag
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Locale
@@ -45,17 +46,19 @@ class DreamTextTest {
     }
 
     @Test
-    fun exportIsOldestFirstWithLucidMarker() {
+    fun exportIsOldestFirstWithTags() {
         val zone = ZoneId.of("UTC")
         fun millis(day: Int) = ZonedDateTime.of(2026, 10, day, 7, 0, 0, 0, zone).toInstant().toEpochMilli()
         val dreams = listOf(
-            Dream(text = "Second ", createdAt = millis(27), lucid = true),
+            Dream(text = "Second ", createdAt = millis(27), tags = setOf(DreamTag.RECURRING, DreamTag.DREAM)),
             Dream(text = "First", createdAt = millis(26)),
+            Dream(text = "", createdAt = millis(28), tags = setOf(DreamTag.NO_DREAM)),
         )
-        val expected = "Monday, October 26, 2026 · 7:00 AM\nFirst\n\n" +
-            "Tuesday, October 27, 2026 · 7:00 AM · Lucid\nSecond"
+        val expected = "Monday, October 26, 2026 · 7:00 AM\nFirst\n\n" +
+            "Tuesday, October 27, 2026 · 7:00 AM · Dream, Recurring\nSecond\n\n" +
+            "Wednesday, October 28, 2026 · 7:00 AM · No dream"
         val actual = DreamText.export(dreams, zone, Locale.US)
-        // JDKs differ on whether the space before AM is narrow; compare with it normalized.
-        assertEquals(expected.replace(' ', ' '), actual.replace(' ', ' '))
+        // JDKs differ on whether the space before AM is narrow ( ); compare with it normalized.
+        assertEquals(expected, actual.replace(' ', ' '))
     }
 }

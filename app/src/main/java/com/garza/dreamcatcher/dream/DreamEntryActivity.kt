@@ -68,7 +68,7 @@ class DreamEntryActivity : ComponentActivity() {
         setContent {
             DreamcatcherTheme {
                 val text by viewModel.text.collectAsStateWithLifecycle()
-                val lucid by viewModel.lucid.collectAsStateWithLifecycle()
+                val tags by viewModel.tags.collectAsStateWithLifecycle()
                 val createdAt by viewModel.createdAt.collectAsStateWithLifecycle()
                 BackHandler(onBack = ::saveAndClose)
                 DreamEntryScreen(
@@ -77,8 +77,8 @@ class DreamEntryActivity : ComponentActivity() {
                     text = text,
                     onTextChange = viewModel::setText,
                     partial = partial,
-                    lucid = lucid,
-                    onLucidChange = viewModel::setLucid,
+                    tags = tags,
+                    onToggleTag = viewModel::toggleTag,
                     listening = listening,
                     voiceAvailable = dictation.isAvailable,
                     message = message,

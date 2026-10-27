@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Search
@@ -29,11 +29,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.garza.dreamcatcher.data.Dream
+import com.garza.dreamcatcher.data.DreamTag
 import com.garza.dreamcatcher.dream.DreamText
+import com.garza.dreamcatcher.ui.TagChipRow
+import com.garza.dreamcatcher.ui.icon
 import com.garza.dreamcatcher.ui.theme.Moon
 
 @Composable
@@ -41,6 +45,8 @@ fun JournalScreen(
     dreams: List<Dream>?,
     query: String,
     onQueryChange: (String) -> Unit,
+    tagFilter: DreamTag?,
+    onTagFilterChange: (DreamTag?) -> Unit,
     onOpen: (Dream) -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -72,10 +78,17 @@ fun JournalScreen(
                 singleLine = true,
             )
         }
+        item {
+            TagChipRow(
+                isSelected = { it == tagFilter },
+                // Tapping the active filter again shows everything.
+                onClick = { onTagFilterChange(if (it == tagFilter) null else it) },
+            )
+        }
         when {
             dreams == null -> Unit
-            dreams.isEmpty() && query.isNotBlank() -> item {
-                EmptyState("No dreams mention \"$query\".")
+            dreams.isEmpty() && (query.isNotBlank() || tagFilter != null) -> item {
+                EmptyState("No entries match.")
             }
             dreams.isEmpty() -> item {
                 EmptyState("No dreams yet.\nSet an alarm, and when it rings you'll be asked what you dreamed. Or tap + to write one now.")
@@ -101,15 +114,6 @@ private fun DreamCard(dream: Dream, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                 )
-                if (dream.lucid) {
-                    Icon(
-                        Icons.Filled.AutoAwesome,
-                        contentDescription = "Lucid",
-                        tint = Moon,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.size(8.dp))
-                }
                 Text(
                     DreamText.formatTime(dream.createdAt),
                     style = MaterialTheme.typography.labelMedium,
@@ -117,12 +121,33 @@ private fun DreamCard(dream: Dream, onClick: () -> Unit) {
                 )
             }
             Spacer(Modifier.height(8.dp))
-            Text(
-                dream.text,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 4,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (dream.text.isNotBlank()) {
+                Text(
+                    dream.text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            } else {
+                Text(
+                    "Nothing remembered",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (dream.tags.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DreamTag.entries.filter { it in dream.tags }.forEach { tag ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(tag.icon, contentDescription = null, tint = Moon, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(tag.label, style = MaterialTheme.typography.labelMedium, color = Moon)
+                        }
+                    }
+                }
+            }
         }
     }
 }

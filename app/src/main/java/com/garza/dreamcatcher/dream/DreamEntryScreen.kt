@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,10 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -26,7 +25,6 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFloatingActionButton
@@ -48,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import com.garza.dreamcatcher.data.DreamTag
+import com.garza.dreamcatcher.ui.TagChipRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,8 +57,8 @@ fun DreamEntryScreen(
     text: String,
     onTextChange: (String) -> Unit,
     partial: String,
-    lucid: Boolean,
-    onLucidChange: (Boolean) -> Unit,
+    tags: Set<DreamTag>,
+    onToggleTag: (DreamTag) -> Unit,
     listening: Boolean,
     voiceAvailable: Boolean,
     message: String?,
@@ -87,8 +87,8 @@ fun DreamEntryScreen(
         },
         bottomBar = {
             BottomControls(
-                lucid = lucid,
-                onLucidChange = onLucidChange,
+                tags = tags,
+                onToggleTag = onToggleTag,
                 listening = listening,
                 voiceAvailable = voiceAvailable,
                 onToggleMic = onToggleMic,
@@ -116,7 +116,9 @@ fun DreamEntryScreen(
                     .weight(1f),
                 placeholder = {
                     Text(
-                        if (voiceAvailable) {
+                        if (DreamTag.NO_DREAM in tags) {
+                            "Nothing remembered? You can save as is, or note how you slept or any fragments."
+                        } else if (voiceAvailable) {
                             "Tap the mic and speak, or type. Who was there? Where were you? How did it feel? " +
                                 "Every detail helps; they fade fast."
                         } else {
@@ -157,37 +159,37 @@ fun DreamEntryScreen(
 
 @Composable
 private fun BottomControls(
-    lucid: Boolean,
-    onLucidChange: (Boolean) -> Unit,
+    tags: Set<DreamTag>,
+    onToggleTag: (DreamTag) -> Unit,
     listening: Boolean,
     voiceAvailable: Boolean,
     onToggleMic: () -> Unit,
     onSave: () -> Unit,
 ) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FilterChip(
-                selected = lucid,
-                onClick = { onLucidChange(!lucid) },
-                label = { Text("Lucid") },
-                leadingIcon = { Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp)) },
-            )
-            Spacer(Modifier.weight(1f))
-            if (voiceAvailable) {
-                MicButton(listening = listening, onClick = onToggleMic)
+            TagChipRow(isSelected = { it in tags }, onClick = onToggleTag, horizontalPadding = 16.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Equal weights on both sides keep the mic centered.
                 Spacer(Modifier.weight(1f))
-            }
-            Button(onClick = onSave) {
-                Icon(Icons.Filled.Check, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Save")
+                if (voiceAvailable) MicButton(listening = listening, onClick = onToggleMic)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                    Button(onClick = onSave) {
+                        Icon(Icons.Filled.Check, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Save")
+                    }
+                }
             }
         }
     }

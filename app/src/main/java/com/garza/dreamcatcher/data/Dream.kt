@@ -9,7 +9,7 @@ data class Dream(
     val text: String,
     val createdAt: Long,
     val updatedAt: Long = createdAt,
-    val lucid: Boolean = false,
+    val tags: Set<DreamTag> = emptySet(),
     /** True when the entry was started from a ringing alarm rather than by hand. */
     val fromAlarm: Boolean = false,
 )

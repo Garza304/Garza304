@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.garza.dreamcatcher.app
 import com.garza.dreamcatcher.data.Dream
+import com.garza.dreamcatcher.data.DreamTag
 import com.garza.dreamcatcher.dream.DreamText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,9 +19,12 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
 
     val query = MutableStateFlow("")
 
+    /** Show only entries with this tag, or everything when null. */
+    val tagFilter = MutableStateFlow<DreamTag?>(null)
+
     /** Null until the first load finishes, so the screen can tell "loading" from "empty". */
-    val dreams: StateFlow<List<Dream>?> = combine(dao.observeAll(), query) { all, q ->
-        all.filter { DreamText.matches(it, q) }
+    val dreams: StateFlow<List<Dream>?> = combine(dao.observeAll(), query, tagFilter) { all, q, tag ->
+        all.filter { (tag == null || tag in it.tags) && DreamText.matches(it, q) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     suspend fun exportText(): String = DreamText.export(dao.getAll())

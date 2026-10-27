@@ -4,17 +4,20 @@ An Android alarm clock that turns into a dream journal the moment you wake up.
 
 When an alarm rings, a full-screen alarm opens (over the lock screen too). Tap **Stop alarm & record dream** and the
 alarm goes quiet. The phone then starts listening right away, so you can say what you dreamed before it fades. You can
-also type. Each entry is saved to a journal you can search, edit, and export.
+also type. Each entry is saved to a journal you can search, filter by tag, edit, and export.
 
 ## Features
 
 - **Alarms**: one-time or repeating on chosen weekdays, with labels, vibration, a 9-minute snooze, and a sound that
   fades in gently. Alarms survive reboots and time-zone changes, and a ringing alarm stops on its own after 10 minutes.
 - **Wake-up capture**: stopping the alarm opens the dream screen with voice dictation already running. The text appears
-  as you talk. Mark a dream as lucid with one tap. Entries save automatically, even if the screen turns off.
+  as you talk. Entries save automatically, even if the screen turns off.
+- **Tags**: mark each night as **Dream**, **Nightmare** or **No dream** (pick one), and add **Lucid** or
+  **Recurring** to a remembered dream. A **No dream** entry can be saved with no text, so nights you don't remember
+  still count.
 - **Privacy on the lock screen**: only the new-entry screen shows over the lock screen. The journal needs an unlocked
   phone.
-- **Journal**: newest first, with search and editing. **Share** exports the whole journal as plain text.
+- **Journal**: newest first, with search, a tag filter, and editing. **Share** exports the whole journal as plain text.
 
 ## Building
 

@@ -134,10 +134,13 @@ private fun MainScreen() {
             Tab.Journal -> {
                 val dreams by journal.dreams.collectAsStateWithLifecycle()
                 val query by journal.query.collectAsStateWithLifecycle()
+                val tagFilter by journal.tagFilter.collectAsStateWithLifecycle()
                 JournalScreen(
                     dreams = dreams,
                     query = query,
                     onQueryChange = { journal.query.value = it },
+                    tagFilter = tagFilter,
+                    onTagFilterChange = { journal.tagFilter.value = it },
                     onOpen = { context.startActivity(DreamEntryActivity.editIntent(context, it.id)) },
                     contentPadding = padding,
                 )

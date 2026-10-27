@@ -6,8 +6,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.garza.dreamcatcher.app
 import com.garza.dreamcatcher.data.Dream
+import com.garza.dreamcatcher.data.DreamTag
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -31,7 +35,10 @@ class DreamEntryViewModel(
     val fromAlarm: Boolean = state[DreamEntryActivity.EXTRA_FROM_ALARM] ?: false
 
     val text: StateFlow<String> = state.getStateFlow(KEY_TEXT, "")
-    val lucid: StateFlow<Boolean> = state.getStateFlow(KEY_LUCID, false)
+    // Saved as text so the selection survives the process being killed.
+    private val encodedTags: StateFlow<String> = state.getStateFlow(KEY_TAGS, "")
+    val tags: StateFlow<Set<DreamTag>> = encodedTags.map(DreamTag::decode)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, DreamTag.decode(encodedTags.value))
     val createdAt: StateFlow<Long> = state.getStateFlow(KEY_CREATED_AT, System.currentTimeMillis())
 
     /** Database row for this entry once it exists (new entries get one on first save). */
@@ -44,7 +51,7 @@ class DreamEntryViewModel(
             viewModelScope.launch {
                 dao.get(editingId)?.let {
                     state[KEY_TEXT] = it.text
-                    state[KEY_LUCID] = it.lucid
+                    state[KEY_TAGS] = DreamTag.encode(it.tags)
                     state[KEY_CREATED_AT] = it.createdAt
                 }
                 state[KEY_LOADED] = true
@@ -56,7 +63,10 @@ class DreamEntryViewModel(
 
     fun appendPhrase(phrase: String) = setText(DreamText.appendPhrase(text.value, phrase))
 
-    fun setLucid(value: Boolean) { state[KEY_LUCID] = value }
+    fun toggleTag(tag: DreamTag) { state[KEY_TAGS] = DreamTag.encode(DreamTag.toggle(currentTags(), tag)) }
+
+    // Read straight from the saved state so a save right after a tap never sees a stale value.
+    private fun currentTags(): Set<DreamTag> = DreamTag.decode(encodedTags.value)
 
     /** Saves in the background (used when the screen is hidden). */
     fun saveDraft() {
@@ -80,22 +90,24 @@ class DreamEntryViewModel(
     private suspend fun save(): Boolean = withContext(NonCancellable) {
         saveLock.withLock {
             val body = text.value.trim()
+            val tags = currentTags()
             val existing = if (rowId != 0L) dao.get(rowId) else null
             when {
-                // Don't keep empty entries; drop a draft that was auto-saved and then cleared.
-                body.isEmpty() -> {
+                // Don't keep empty entries (a "No dream" night is worth keeping even without words);
+                // drop a draft that was auto-saved and then cleared.
+                body.isEmpty() && DreamTag.NO_DREAM !in tags -> {
                     if (isNew && existing != null) dao.delete(existing)
                     false
                 }
                 existing != null -> {
-                    if (existing.text != body || existing.lucid != lucid.value) {
-                        dao.update(existing.copy(text = body, lucid = lucid.value, updatedAt = System.currentTimeMillis()))
+                    if (existing.text != body || existing.tags != tags) {
+                        dao.update(existing.copy(text = body, tags = tags, updatedAt = System.currentTimeMillis()))
                     }
                     true
                 }
                 else -> {
                     rowId = dao.insert(
-                        Dream(text = body, createdAt = createdAt.value, lucid = lucid.value, fromAlarm = fromAlarm)
+                        Dream(text = body, createdAt = createdAt.value, tags = tags, fromAlarm = fromAlarm)
                     )
                     true
                 }
@@ -105,7 +117,7 @@ class DreamEntryViewModel(
 
     private companion object {
         const val KEY_TEXT = "text"
-        const val KEY_LUCID = "lucid"
+        const val KEY_TAGS = "tags"
         const val KEY_CREATED_AT = "createdAt"
         const val KEY_ROW_ID = "rowId"
         const val KEY_LOADED = "loaded"

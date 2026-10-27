@@ -1,6 +1,7 @@
 package com.garza.dreamcatcher.dream
 
 import com.garza.dreamcatcher.data.Dream
+import com.garza.dreamcatcher.data.DreamTag
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -44,9 +45,14 @@ object DreamText {
                 append(formatDate(dream.createdAt, zone, locale))
                 append(" · ")
                 append(formatTime(dream.createdAt, zone, locale))
-                if (dream.lucid) append(" · Lucid")
-                append('\n')
-                append(dream.text.trim())
+                if (dream.tags.isNotEmpty()) {
+                    append(" · ")
+                    append(DreamTag.entries.filter { it in dream.tags }.joinToString(", ") { it.label })
+                }
+                if (dream.text.isNotBlank()) {
+                    append('\n')
+                    append(dream.text.trim())
+                }
             }
         }
 }
