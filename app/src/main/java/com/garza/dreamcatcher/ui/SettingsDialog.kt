@@ -90,6 +90,9 @@ fun SettingsDialog(onDismiss: () -> Unit) {
                         }
                     }
                 }
+
+                Spacer(Modifier.height(8.dp))
+                BackupSection(onRestored = { style = Settings.entryStyle(context) })
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },

@@ -1,1 +1,1 @@
-# Room and Compose ship their own consumer rules; nothing extra needed yet.
+# Room, Compose, WorkManager and kotlinx.serialization ship their own consumer rules; nothing extra needed yet.

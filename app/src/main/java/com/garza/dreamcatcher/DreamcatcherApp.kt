@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import com.garza.dreamcatcher.alarm.AlarmScheduler
+import com.garza.dreamcatcher.backup.AutoBackup
 import com.garza.dreamcatcher.data.AppDatabase
 import com.garza.dreamcatcher.dream.WakeUpShortcut
 
@@ -17,6 +18,7 @@ class DreamcatcherApp : Application() {
         Settings.load(this)
         createNotificationChannels()
         WakeUpShortcut.refreshNotification(this)
+        AutoBackup.load(this)
     }
 
     private fun createNotificationChannels() {

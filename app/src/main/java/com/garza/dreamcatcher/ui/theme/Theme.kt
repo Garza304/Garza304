@@ -15,6 +15,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -58,6 +59,9 @@ fun Palette.toColorScheme(): ColorScheme {
     )
 }
 
+/** The color scheme in use, for colors Material's ColorScheme has no slot for, such as chart colors. */
+val LocalPalette = staticCompositionLocalOf { Palettes.default }
+
 /** Background for the full-screen wake-up surfaces: the scheme's background fading toward its primary color. */
 @Composable
 fun nightSkyBrush(): Brush {
@@ -85,6 +89,10 @@ fun DreamcatcherTheme(content: @Composable () -> Unit) {
 
     MaterialTheme(colorScheme = scheme) {
         // Text outside a Surface or Scaffold would otherwise fall back to black.
-        CompositionLocalProvider(LocalContentColor provides scheme.onBackground, content = content)
+        CompositionLocalProvider(
+            LocalContentColor provides scheme.onBackground,
+            LocalPalette provides palette,
+            content = content,
+        )
     }
 }

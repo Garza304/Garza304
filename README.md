@@ -33,6 +33,15 @@ also type. Each entry is saved to a journal you can search, filter by tag, edit,
 - **Privacy on the lock screen**: only the new-entry screen shows over the lock screen. The journal needs an unlocked
   phone.
 - **Journal**: newest first, with search, a tag filter, and editing. **Share** exports the whole journal as plain text.
+- **Insights**: a calendar that marks each morning as dream (dot), nightmare (diamond) or no dream (ring). Tap a day
+  to see its entries. It also shows your current and best streak of recorded mornings. For 30 days, 90 days, a year or
+  all time, you get:
+  - how many mornings you recorded, your dream recall and your nightmare count;
+  - a stacked chart of mornings by week, month or year, with a table view;
+  - your most-used tags.
+- **Backup and restore**: Settings → Backup saves the journal, alarms and settings to a JSON file anywhere you choose,
+  including Google Drive. **Restore** only adds what's missing, so restoring twice is harmless. **Back up every day**
+  saves a dated copy to a folder on the phone and keeps the last 7.
 
 ## Building
 
@@ -65,5 +74,19 @@ app/src/main/java/com/garza/dreamcatcher/
            AlarmService (sound + notification), AlarmRingActivity (full-screen alarm)
   dream/   DreamEntryActivity + screen + view model, SpeechDictation, DreamText helpers
   data/    Room database: Dream and Alarm entities and DAOs
-  ui/      MainActivity with the Journal and Alarms tabs, theme
+  insights/ DreamStats: streaks, totals, chart buckets and top tags (pure Kotlin, unit tested)
+  backup/  BackupFormat (JSON file format, unit tested), Backup (save/restore), AutoBackup (daily WorkManager job)
+  ui/      MainActivity with the Journal, Insights and Alarms tabs; theme
+  ui/charts/ The shared chart kit: stacked columns, horizontal bars, stat tiles, legend, table
 ```
+
+### Chart colors
+
+Charts don't use a scheme's primary and accent colors, because in many schemes those two are too alike to tell apart.
+Each scheme has its own chart colors for Dream, Nightmare and No dream. `ChartColorsTest` checks every scheme with
+the same rules used in data-visualization palettes:
+- at least 15 OKLab ΔE apart with normal color vision;
+- at least 8 apart under simulated protanopia and deuteranopia (Machado 2009);
+- 3:1 contrast against every surface (2.5:1 for the recessive gray).
+
+A new scheme must pass this test.

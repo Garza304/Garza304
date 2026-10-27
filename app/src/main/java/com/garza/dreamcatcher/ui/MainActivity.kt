@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +42,8 @@ import com.garza.dreamcatcher.dream.DreamEntryActivity
 import com.garza.dreamcatcher.ui.alarms.AlarmEditDialog
 import com.garza.dreamcatcher.ui.alarms.AlarmsScreen
 import com.garza.dreamcatcher.ui.alarms.AlarmsViewModel
+import com.garza.dreamcatcher.ui.insights.InsightsScreen
+import com.garza.dreamcatcher.ui.insights.InsightsViewModel
 import com.garza.dreamcatcher.ui.journal.JournalScreen
 import com.garza.dreamcatcher.ui.journal.JournalViewModel
 import com.garza.dreamcatcher.ui.theme.DreamcatcherTheme
@@ -56,7 +59,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Tab(val title: String) { Journal("Dream journal"), Alarms("Alarms") }
+private enum class Tab(val title: String) { Journal("Dream journal"), Insights("Insights"), Alarms("Alarms") }
 
 /** The alarm being edited: [alarm] is null when creating a new one. */
 private data class AlarmEditor(val alarm: Alarm?)
@@ -68,6 +71,7 @@ private fun MainScreen() {
     val scope = rememberCoroutineScope()
     val journal: JournalViewModel = viewModel()
     val alarmsModel: AlarmsViewModel = viewModel()
+    val insights: InsightsViewModel = viewModel()
 
     var tab by rememberSaveable { mutableIntStateOf(Tab.Journal.ordinal) }
     var editor by remember { mutableStateOf<AlarmEditor?>(null) }
@@ -113,6 +117,12 @@ private fun MainScreen() {
                     label = { Text("Journal") },
                 )
                 NavigationBarItem(
+                    selected = currentTab == Tab.Insights,
+                    onClick = { tab = Tab.Insights.ordinal },
+                    icon = { Icon(Icons.Filled.Insights, contentDescription = null) },
+                    label = { Text("Insights") },
+                )
+                NavigationBarItem(
                     selected = currentTab == Tab.Alarms,
                     onClick = { tab = Tab.Alarms.ordinal },
                     icon = { Icon(Icons.Filled.Alarm, contentDescription = null) },
@@ -132,6 +142,7 @@ private fun MainScreen() {
                     icon = { Icon(Icons.Filled.AlarmAdd, contentDescription = null) },
                     text = { Text("Add alarm") },
                 )
+                Tab.Insights -> Unit
             }
         },
     ) { padding ->
@@ -148,6 +159,17 @@ private fun MainScreen() {
                     customTags = customTags,
                     tagFilter = tagFilter,
                     onTagFilterChange = { journal.tagFilter.value = it },
+                    onOpen = { context.startActivity(DreamEntryActivity.editIntent(context, it.id)) },
+                    contentPadding = padding,
+                )
+            }
+            Tab.Insights -> {
+                val state by insights.state.collectAsStateWithLifecycle()
+                InsightsScreen(
+                    state = state,
+                    onMonthChange = insights::showMonth,
+                    onSelectDay = insights::selectDay,
+                    onRangeChange = { insights.range.value = it },
                     onOpen = { context.startActivity(DreamEntryActivity.editIntent(context, it.id)) },
                     contentPadding = padding,
                 )

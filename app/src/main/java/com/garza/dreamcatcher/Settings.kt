@@ -1,6 +1,7 @@
 package com.garza.dreamcatcher
 
 import android.content.Context
+import com.garza.dreamcatcher.backup.SettingsRecord
 import com.garza.dreamcatcher.ui.theme.Palette
 import com.garza.dreamcatcher.ui.theme.Palettes
 import com.garza.dreamcatcher.widget.QuickMicWidgetBase
@@ -50,5 +51,13 @@ object Settings {
 
     fun setEntryStyle(context: Context, style: EntryStyle) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_ENTRY_STYLE, style.name).apply()
+    }
+
+    /** The settings worth carrying to a new phone. */
+    fun toBackup(context: Context) = SettingsRecord(palette = palette.value.id, entryStyle = entryStyle(context).name)
+
+    fun restore(context: Context, record: SettingsRecord) {
+        record.palette?.let { id -> Palettes.all.firstOrNull { it.id == id }?.let { setPalette(context, it) } }
+        record.entryStyle?.let { name -> EntryStyle.entries.firstOrNull { it.name == name }?.let { setEntryStyle(context, it) } }
     }
 }

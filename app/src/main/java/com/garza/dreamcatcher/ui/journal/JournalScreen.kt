@@ -109,7 +109,7 @@ fun JournalScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DreamCard(dream: Dream, onClick: () -> Unit) {
+fun DreamCard(dream: Dream, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
