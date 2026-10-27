@@ -28,6 +28,8 @@ also type. Each entry is saved to a journal you can search, filter by tag, edit,
 - **Color schemes**: 17 to choose from in Settings, 11 dark and 6 light. They include True black for OLED screens,
   plus Red light and Amber glow, which are easy on night-adjusted eyes. A unit test checks every scheme's text against
   WCAG AA contrast.
+- **Home screen widget**: a 1×1 round mic, or a 2×1 "Record your dream" pill. One tap opens a new entry with the mic
+  already listening. The widget uses your color scheme.
 - **Privacy on the lock screen**: only the new-entry screen shows over the lock screen. The journal needs an unlocked
   phone.
 - **Journal**: newest first, with search, a tag filter, and editing. **Share** exports the whole journal as plain text.

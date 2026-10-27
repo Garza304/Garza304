@@ -86,6 +86,30 @@
             android:foregroundServiceType="mediaPlayback" />
 
         <receiver
+            android:name=".widget.QuickMicWidget"
+            android:exported="true"
+            android:label="@string/widget_label_small">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_mic_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.QuickMicWideWidget"
+            android:exported="true"
+            android:label="@string/widget_label_wide">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_mic_wide_info" />
+        </receiver>
+
+        <receiver
             android:name=".alarm.AlarmReceiver"
             android:exported="false" />
 

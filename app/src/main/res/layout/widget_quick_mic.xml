@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1x1: a round mic button. Colors here are the Midnight defaults; QuickMicWidget recolors them. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:contentDescription="@string/widget_record_dream">
+
+    <ImageView
+        android:id="@+id/widget_bg"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_circle"
+        android:tint="#FF191A3A" />
+
+    <ImageView
+        android:id="@+id/widget_mic_bg"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_circle"
+        android:tint="#FFB9A7FF" />
+
+    <ImageView
+        android:id="@+id/widget_mic"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_widget_mic"
+        android:tint="#FF231A4F" />
+</FrameLayout>

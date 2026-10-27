@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 2x1: mic button with a "Record your dream" label. Colors are the Midnight defaults; QuickMicWidget recolors them. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:contentDescription="@string/widget_record_dream">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/widget_bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_pill"
+            android:tint="#FF191A3A" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="16dp">
+
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <ImageView
+                    android:id="@+id/widget_mic_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/widget_circle"
+                    android:tint="#FFB9A7FF" />
+
+                <ImageView
+                    android:id="@+id/widget_mic"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_widget_mic"
+                    android:tint="#FF231A4F" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:importantForAccessibility="no"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/widget_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:text="@string/widget_title"
+                    android:textColor="#FFE5E2F5"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/widget_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/widget_subtitle"
+                    android:textColor="#FFC7C4DC"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

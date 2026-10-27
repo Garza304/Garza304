@@ -3,6 +3,7 @@ package com.garza.dreamcatcher
 import android.content.Context
 import com.garza.dreamcatcher.ui.theme.Palette
 import com.garza.dreamcatcher.ui.theme.Palettes
+import com.garza.dreamcatcher.widget.QuickMicWidgetBase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,7 @@ object Settings {
     fun setPalette(context: Context, palette: Palette) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_PALETTE, palette.id).apply()
         paletteState.value = palette
+        QuickMicWidgetBase.refreshAll(context)
     }
 
     fun entryStyle(context: Context): EntryStyle {

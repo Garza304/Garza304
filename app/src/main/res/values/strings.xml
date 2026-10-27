@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dreamcatcher</string>
+    <string name="widget_record_dream">Record a dream</string>
+    <string name="widget_title">Record</string>
+    <string name="widget_subtitle">your dream</string>
+    <string name="widget_description">One tap starts recording a dream</string>
+    <string name="widget_label_small">Record dream</string>
+    <string name="widget_label_wide">Record dream (wide)</string>
 </resources>
