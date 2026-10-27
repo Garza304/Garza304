@@ -1,0 +1,41 @@
+package com.garza.dreamcatcher
+
+import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import com.garza.dreamcatcher.alarm.AlarmScheduler
+import com.garza.dreamcatcher.data.AppDatabase
+
+class DreamcatcherApp : Application() {
+
+    val database: AppDatabase by lazy { AppDatabase.get(this) }
+    val scheduler: AlarmScheduler by lazy { AlarmScheduler(this) }
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannels()
+    }
+
+    private fun createNotificationChannels() {
+        val manager = getSystemService(NotificationManager::class.java)
+        val alarm = NotificationChannel(CHANNEL_ALARM, "Ringing alarms", NotificationManager.IMPORTANCE_HIGH).apply {
+            description = "Shown while an alarm is ringing"
+            // AlarmService plays the sound and vibration itself so it can loop and fade in.
+            setSound(null, null)
+            enableVibration(false)
+            setBypassDnd(true)
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+        }
+        val reminders = NotificationChannel(CHANNEL_REMINDERS, "Reminders", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = "Snoozed and missed alarms"
+        }
+        manager.createNotificationChannels(listOf(alarm, reminders))
+    }
+
+    companion object {
+        const val CHANNEL_ALARM = "alarm"
+        const val CHANNEL_REMINDERS = "reminders"
+    }
+}
+
+val android.content.Context.app: DreamcatcherApp get() = applicationContext as DreamcatcherApp
