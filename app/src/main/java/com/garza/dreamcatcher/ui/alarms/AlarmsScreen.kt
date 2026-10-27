@@ -80,6 +80,7 @@ fun AlarmsScreen(
                 )
             }
         }
+        item { WakeUpShortcutCard() }
     }
 }
 

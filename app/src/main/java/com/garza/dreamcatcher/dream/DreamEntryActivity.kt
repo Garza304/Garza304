@@ -25,10 +25,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Write down a dream by voice or keyboard. Opened right after an alarm is stopped (listening
- * starts on its own, even over the lock screen), from the journal for a new entry, or to edit one.
+ * Write down a dream by voice or keyboard. Opened from the journal for a new entry or to edit one.
+ * New entries started on waking (alarm, Quick Settings tile, lock screen shortcut) open in
+ * [LockScreenDreamActivity] instead, which shows over the lock screen and starts listening on its own.
  */
-class DreamEntryActivity : ComponentActivity() {
+open class DreamEntryActivity : ComponentActivity() {
+
+    /** Whether this screen may appear over the lock screen. Only new entries ever do. */
+    protected open val overLockScreen = false
 
     private val viewModel: DreamEntryViewModel by viewModels()
     private lateinit var dictation: SpeechDictation
@@ -43,11 +47,9 @@ class DreamEntryActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (viewModel.fromAlarm) {
-            // Only this screen shows over the lock screen; the rest of the journal stays private.
-            showOverLockScreen(turnScreenOn = false)
-            AlarmService.dismiss(this)
-        }
+        // Only new entries show over the lock screen; the rest of the journal stays private.
+        if (overLockScreen) showOverLockScreen(turnScreenOn = false)
+        if (viewModel.fromAlarm) AlarmService.dismiss(this)
         enableEdgeToEdge()
 
         dictation = SpeechDictation(this, object : SpeechDictation.Listener {
@@ -57,8 +59,8 @@ class DreamEntryActivity : ComponentActivity() {
             override fun onError(message: String) { this@DreamEntryActivity.message = message }
         })
 
-        if (viewModel.fromAlarm && savedInstanceState == null) {
-            // Give the alarm sound a moment to stop so the microphone doesn't hear it.
+        if (intent.getBooleanExtra(EXTRA_AUTO_LISTEN, false) && savedInstanceState == null) {
+            // Give a ringing alarm a moment to stop so the microphone doesn't hear it.
             lifecycleScope.launch {
                 delay(600)
                 startDictation()
@@ -127,15 +129,30 @@ class DreamEntryActivity : ComponentActivity() {
     companion object {
         const val EXTRA_DREAM_ID = "com.garza.dreamcatcher.DREAM_ID"
         const val EXTRA_FROM_ALARM = "com.garza.dreamcatcher.FROM_ALARM"
+        private const val EXTRA_AUTO_LISTEN = "com.garza.dreamcatcher.AUTO_LISTEN"
 
         fun newIntent(context: Context) = Intent(context, DreamEntryActivity::class.java)
 
         fun editIntent(context: Context, dreamId: Long) =
             newIntent(context).putExtra(EXTRA_DREAM_ID, dreamId)
 
+        /** A new entry right after an alarm, over the lock screen, already listening. */
         fun fromAlarmIntent(context: Context) =
-            newIntent(context)
-                .putExtra(EXTRA_FROM_ALARM, true)
+            wakeUpIntent(context).putExtra(EXTRA_FROM_ALARM, true)
+
+        /** A new entry on waking without an alarm (tile or lock screen shortcut), already listening. */
+        fun wakeUpIntent(context: Context) =
+            Intent(context, LockScreenDreamActivity::class.java)
+                .putExtra(EXTRA_AUTO_LISTEN, true)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
     }
+}
+
+/**
+ * The new-entry screen as shown on waking. It is declared `showWhenLocked` in the manifest so the
+ * system opens it from the lock screen (notification, Quick Settings tile) without asking to unlock;
+ * it can only create entries, never show existing ones.
+ */
+class LockScreenDreamActivity : DreamEntryActivity() {
+    override val overLockScreen = true
 }

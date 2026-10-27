@@ -15,6 +15,9 @@ also type. Each entry is saved to a journal you can search, filter by tag, edit,
 - **Tags**: mark each night as **Dream**, **Nightmare** or **No dream** (pick one), and add **Lucid** or
   **Recurring** to a remembered dream. A **No dream** entry can be saved with no text, so nights you don't remember
   still count.
+- **Woke up before the alarm?** Start a recording from the lock screen without unlocking. Use the **Record dream**
+  Quick Settings tile, or turn on the silent lock screen shortcut notification. Both are set up from the card at the
+  bottom of the Alarms tab.
 - **Privacy on the lock screen**: only the new-entry screen shows over the lock screen. The journal needs an unlocked
   phone.
 - **Journal**: newest first, with search, a tag filter, and editing. **Share** exports the whole journal as plain text.
