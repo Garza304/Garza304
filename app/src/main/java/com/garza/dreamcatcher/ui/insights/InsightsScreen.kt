@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
@@ -30,11 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.garza.dreamcatcher.InsightsStyle
 import com.garza.dreamcatcher.data.Dream
 import com.garza.dreamcatcher.insights.Bucket
 import com.garza.dreamcatcher.insights.Granularity
 import com.garza.dreamcatcher.insights.NightKind
 import com.garza.dreamcatcher.insights.StatsRange
+import com.garza.dreamcatcher.insights.TagCount
 import com.garza.dreamcatcher.ui.charts.ChartLegend
 import com.garza.dreamcatcher.ui.charts.ChartTable
 import com.garza.dreamcatcher.ui.charts.HorizontalBarChart
@@ -48,20 +51,34 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
-/**
- * The Insights tab: a calendar of mornings, then trends for a chosen period. The period chips
- * sit above everything they scope; the calendar above them has its own month controls.
- */
+/** What the Insights layouts can ask for. */
+data class InsightsActions(
+    val onMonthChange: (YearMonth) -> Unit,
+    val onSelectDay: (LocalDate) -> Unit,
+    val onRangeChange: (StatsRange) -> Unit,
+    val onOpen: (Dream) -> Unit,
+    /** Shows the journal filtered to this tag. */
+    val onTag: (TagCount) -> Unit,
+    val onDigestMonthly: (Boolean) -> Unit,
+    /** +1 goes a period back, -1 forward. */
+    val onDigestStep: (Int) -> Unit,
+)
+
+/** The Insights tab, in the layout picked in Settings. */
 @Composable
-fun InsightsScreen(
-    state: InsightsState?,
-    onMonthChange: (YearMonth) -> Unit,
-    onSelectDay: (LocalDate) -> Unit,
-    onRangeChange: (StatsRange) -> Unit,
-    onOpen: (Dream) -> Unit,
-    contentPadding: PaddingValues,
-) {
+fun InsightsScreen(style: InsightsStyle, state: InsightsState?, actions: InsightsActions, contentPadding: PaddingValues) {
     if (state == null) return
+    when (style) {
+        InsightsStyle.CALENDAR -> CalendarLayout(state, actions, contentPadding)
+        InsightsStyle.HEATMAP -> HeatmapLayout(state, actions, contentPadding)
+        InsightsStyle.DIGEST -> DigestLayout(state, actions, contentPadding)
+        InsightsStyle.PATTERNS -> PatternsLayout(state, actions, contentPadding)
+    }
+}
+
+/** The scrolling column every layout is built in. */
+@Composable
+internal fun InsightsList(contentPadding: PaddingValues, content: LazyListScope.() -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -71,8 +88,26 @@ fun InsightsScreen(
             bottom = contentPadding.calculateBottomPadding() + 24.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        item { CalendarCard(state, onMonthChange, onSelectDay) }
+        content = content,
+    )
+}
+
+internal fun LazyListScope.noEntriesYet() = item {
+    Text(
+        "Your trends will show up here once you've recorded a few mornings.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
+ * Calendar first: a calendar of mornings, then trends for a chosen period. The period chips sit
+ * above everything they scope; the calendar above them has its own month controls.
+ */
+@Composable
+private fun CalendarLayout(state: InsightsState, actions: InsightsActions, contentPadding: PaddingValues) {
+    InsightsList(contentPadding) {
+        item { CalendarCard(state, actions.onMonthChange, actions.onSelectDay) }
 
         state.selectedDay?.let { day ->
             item {
@@ -82,7 +117,7 @@ fun InsightsScreen(
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
-            items(state.dayEntries, key = { "day-" + it.id }) { DreamCard(it, onClick = { onOpen(it) }) }
+            items(state.dayEntries, key = { "day-" + it.id }) { DreamCard(it, onClick = { actions.onOpen(it) }) }
         }
 
         item {
@@ -92,17 +127,11 @@ fun InsightsScreen(
                 modifier = Modifier.padding(top = 12.dp).semantics { heading() },
             )
         }
-        item { RangeChips(state.range, onRangeChange) }
+        item { RangeChips(state.range, actions.onRangeChange) }
 
         if (!state.hasEntries) {
-            item {
-                Text(
-                    "Your trends will show up here once you've recorded a few mornings.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            return@LazyColumn
+            noEntriesYet()
+            return@InsightsList
         }
 
         item { SummaryTiles(state) }
@@ -142,7 +171,7 @@ private fun CalendarCard(state: InsightsState, onMonthChange: (YearMonth) -> Uni
 }
 
 @Composable
-private fun RangeChips(range: StatsRange, onRangeChange: (StatsRange) -> Unit) {
+internal fun RangeChips(range: StatsRange, onRangeChange: (StatsRange) -> Unit) {
     Row(
         Modifier.horizontalScroll(rememberScrollState()).selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -236,7 +265,7 @@ private fun MorningsCard(state: InsightsState) {
 }
 
 @Composable
-private fun TagsCard(state: InsightsState) {
+internal fun TagsCard(state: InsightsState) {
     InsightCard {
         Text("Most-used tags", style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
         Text(
@@ -262,7 +291,7 @@ private fun TagsCard(state: InsightsState) {
 }
 
 @Composable
-private fun InsightCard(content: @Composable () -> Unit) {
+internal fun InsightCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -271,7 +300,7 @@ private fun InsightCard(content: @Composable () -> Unit) {
     }
 }
 
-private fun breakdown(b: Bucket): String =
+internal fun breakdown(b: Bucket): String =
     if (b.total == 0) {
         "nothing recorded"
     } else {
@@ -280,7 +309,7 @@ private fun breakdown(b: Bucket): String =
             .joinToString(", ") { (kind, n) -> kind.count(n) }
     }
 
-private fun periodName(b: Bucket, granularity: Granularity): String {
+internal fun periodName(b: Bucket, granularity: Granularity): String {
     val locale = Locale.getDefault()
     return when (granularity) {
         Granularity.WEEK -> "Week of " + b.start.format(DateTimeFormatter.ofPattern("MMM d", locale))
@@ -289,7 +318,7 @@ private fun periodName(b: Bucket, granularity: Granularity): String {
     }
 }
 
-private fun axisLabel(b: Bucket, granularity: Granularity, spansYears: Boolean): String {
+internal fun axisLabel(b: Bucket, granularity: Granularity, spansYears: Boolean): String {
     val locale = Locale.getDefault()
     return when (granularity) {
         Granularity.WEEK -> b.start.format(DateTimeFormatter.ofPattern("MMM d", locale))

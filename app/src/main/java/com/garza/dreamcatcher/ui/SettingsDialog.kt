@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.garza.dreamcatcher.EntryStyle
+import com.garza.dreamcatcher.InsightsStyle
 import com.garza.dreamcatcher.Settings
 import com.garza.dreamcatcher.ui.theme.Palette
 import com.garza.dreamcatcher.ui.theme.Palettes
@@ -49,6 +50,7 @@ fun SettingsDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     var style by remember { mutableStateOf(Settings.entryStyle(context)) }
     val palette by Settings.palette.collectAsStateWithLifecycle()
+    val insightsStyle by Settings.insightsStyle.collectAsStateWithLifecycle()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -61,34 +63,15 @@ fun SettingsDialog(onDismiss: () -> Unit) {
 
                 Spacer(Modifier.height(8.dp))
                 Text("When you start a new dream", style = MaterialTheme.typography.titleSmall)
-                Column(Modifier.selectableGroup()) {
-                    EntryStyle.entries.forEach { option ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = option == style,
-                                    onClick = {
-                                        style = option
-                                        Settings.setEntryStyle(context, option)
-                                    },
-                                    role = Role.RadioButton,
-                                )
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.Top,
-                        ) {
-                            // The whole row handles the click, so the button itself doesn't.
-                            RadioButton(selected = option == style, onClick = null)
-                            Column(Modifier.padding(start = 12.dp)) {
-                                Text(option.title, style = MaterialTheme.typography.bodyLarge)
-                                Text(
-                                    option.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
+                RadioOptions(EntryStyle.entries, style, { it.title }, { it.description }) {
+                    style = it
+                    Settings.setEntryStyle(context, it)
+                }
+
+                Spacer(Modifier.height(8.dp))
+                Text("Insights layout", style = MaterialTheme.typography.titleSmall)
+                RadioOptions(InsightsStyle.entries, insightsStyle, { it.title }, { it.description }) {
+                    Settings.setInsightsStyle(context, it)
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -97,6 +80,35 @@ fun SettingsDialog(onDismiss: () -> Unit) {
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
     )
+}
+
+/** A titled, described radio button per option; the whole row is the touch target. */
+@Composable
+private fun <T> RadioOptions(
+    options: List<T>,
+    selected: T,
+    title: (T) -> String,
+    description: (T) -> String,
+    onSelect: (T) -> Unit,
+) {
+    Column(Modifier.selectableGroup()) {
+        options.forEach { option ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(selected = option == selected, onClick = { onSelect(option) }, role = Role.RadioButton)
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                // The whole row handles the click, so the button itself doesn't.
+                RadioButton(selected = option == selected, onClick = null)
+                Column(Modifier.padding(start = 12.dp)) {
+                    Text(title(option), style = MaterialTheme.typography.bodyLarge)
+                    Text(description(option), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
 }
 
 @Composable

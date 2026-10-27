@@ -33,12 +33,16 @@ also type. Each entry is saved to a journal you can search, filter by tag, edit,
 - **Privacy on the lock screen**: only the new-entry screen shows over the lock screen. The journal needs an unlocked
   phone.
 - **Journal**: newest first, with search, a tag filter, and editing. **Share** exports the whole journal as plain text.
-- **Insights**: a calendar that marks each morning as dream (dot), nightmare (diamond) or no dream (ring). Tap a day
-  to see its entries. It also shows your current and best streak of recorded mornings. For 30 days, 90 days, a year or
-  all time, you get:
-  - how many mornings you recorded, your dream recall and your nightmare count;
-  - a stacked chart of mornings by week, month or year, with a table view;
-  - your most-used tags.
+- **Insights**: four layouts to pick from in Settings → Insights layout:
+  - **Calendar first**: a month calendar that marks each morning as dream (dot), nightmare (diamond) or no dream
+    (ring), with your streak. Below it, for 30 days, 90 days, a year or all time: mornings recorded, recall,
+    nightmares, a stacked chart by week, month or year (with a table view), and your most-used tags.
+  - **Streak and heatmap**: a big streak number, 20 weeks of mornings at a glance, and figures compared with the period
+    before. Tap a tag to open the journal filtered to it.
+  - **Weekly digest**: the week or month in a sentence over a 7-day strip or calendar, whether you remember more when
+    you wake on your own or to the alarm, the period's themes, and your latest dream.
+  - **Patterns**: recall over time as a line chart, the dream / nightmare / no dream mix, the hours you record at, and
+    lucid and recurring counts.
 - **Backup and restore**: Settings → Backup saves the journal, alarms and settings to a JSON file anywhere you choose,
   including Google Drive. **Restore** only adds what's missing, so restoring twice is harmless. **Back up every day**
   saves a dated copy to a folder on the phone and keeps the last 7.

@@ -44,7 +44,7 @@ data class AlarmRecord(
 )
 
 @Serializable
-data class SettingsRecord(val palette: String? = null, val entryStyle: String? = null)
+data class SettingsRecord(val palette: String? = null, val entryStyle: String? = null, val insightsStyle: String? = null)
 
 /** A file that can't be restored, with a message fit to show as is. */
 class BackupException(message: String) : Exception(message)

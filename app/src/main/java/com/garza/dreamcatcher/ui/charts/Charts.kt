@@ -14,6 +14,12 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -177,41 +183,157 @@ fun StackedColumnChart(
             }
         }
 
-        // X labels: as many as fit, always including the most recent column.
-        if (columns.isNotEmpty()) {
-            val measured = columns.map { measurer.measure(it.label, axisStyle) }
-            val widest = measured.maxOf { it.size.width } + 8.dp.toPx()
-            val every = ceil(widest / slot).toInt().coerceAtLeast(1)
-            measured.forEachIndexed { index, label ->
-                if ((columns.lastIndex - index) % every != 0) return@forEachIndexed
-                val center = plotLeft + slot * (index + 0.5f)
-                val x = (center - label.size.width / 2f).coerceIn(0f, size.width - label.size.width)
-                drawText(label, topLeft = Offset(x, plotBottom + 6.dp.toPx()))
+        drawXLabels(columns.map { measurer.measure(it.label, axisStyle) }, plotLeft, slot, plotBottom)
+    }
+}
+
+/**
+ * A percentage over time on a 0–100% axis: a 2dp line with a faint wash beneath, gaps where a
+ * period has no data, and a ringed dot on the latest value. Tapping selects the nearest point.
+ */
+@Composable
+fun PercentLineChart(
+    points: List<Int?>,
+    labels: List<String>,
+    selected: Int?,
+    onSelect: (Int) -> Unit,
+    description: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    plotHeight: Dp = 140.dp,
+    surface: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+) {
+    val colors = MaterialTheme.colorScheme
+    val measurer = rememberTextMeasurer()
+    val axisStyle = MaterialTheme.typography.labelSmall.copy(color = colors.onSurfaceVariant, fontFeatureSettings = "tnum")
+    val geometry = remember { FloatArray(2) }
+    val currentOnSelect by rememberUpdatedState(onSelect)
+    val ticks = listOf(0, 25, 50, 75, 100)
+
+    Canvas(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(plotHeight + XAxisBand)
+            .semantics { contentDescription = description }
+            .pointerInput(points) {
+                detectTapGestures { offset ->
+                    val (plotLeft, slot) = geometry
+                    if (slot > 0f && points.isNotEmpty()) {
+                        currentOnSelect(((offset.x - plotLeft) / slot).toInt().coerceIn(0, points.lastIndex))
+                    }
+                }
+            },
+    ) {
+        val tickLabels = ticks.map { measurer.measure("$it%", axisStyle) }
+        val plotLeft = tickLabels.maxOf { it.size.width } + 8.dp.toPx()
+        val plotTop = tickLabels.first().size.height / 2f
+        val plotBottom = plotHeight.toPx()
+        val plotH = plotBottom - plotTop
+        val slot = (size.width - plotLeft) / points.size.coerceAtLeast(1)
+        geometry[0] = plotLeft
+        geometry[1] = slot
+        fun x(i: Int) = plotLeft + slot * (i + 0.5f)
+        fun y(v: Int) = plotBottom - plotH * v / 100f
+
+        ticks.forEachIndexed { i, tick ->
+            val yy = y(tick)
+            drawLine(colors.outlineVariant, Offset(plotLeft, yy), Offset(size.width, yy), strokeWidth = 1f)
+            val label = tickLabels[i]
+            drawText(label, topLeft = Offset(plotLeft - 8.dp.toPx() - label.size.width, yy - label.size.height / 2f))
+        }
+
+        if (selected != null && selected in points.indices) {
+            drawLine(colors.outline, Offset(x(selected), plotTop), Offset(x(selected), plotBottom), strokeWidth = 1.dp.toPx())
+        }
+
+        // Continuous runs of known values; a run of one is drawn as a dot only.
+        val runs = mutableListOf<MutableList<Int>>()
+        points.forEachIndexed { i, v ->
+            if (v == null) return@forEachIndexed
+            if (runs.isEmpty() || points.getOrNull(i - 1) == null) runs += mutableListOf<Int>()
+            runs.last() += i
+        }
+        runs.filter { it.size > 1 }.forEach { run ->
+            val line = Path().apply {
+                run.forEachIndexed { k, i -> if (k == 0) moveTo(x(i), y(points[i]!!)) else lineTo(x(i), y(points[i]!!)) }
             }
+            val area = Path().apply {
+                addPath(line)
+                lineTo(x(run.last()), plotBottom)
+                lineTo(x(run.first()), plotBottom)
+                close()
+            }
+            drawPath(area, color.copy(alpha = 0.1f))
+            drawPath(line, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
+        val dots = (runs.filter { it.size == 1 }.map { it.first() } + listOfNotNull(points.indexOfLast { it != null }.takeIf { it >= 0 }, selected?.takeIf { points.getOrNull(it) != null })).toSet()
+        dots.forEach { i ->
+            val center = Offset(x(i), y(points[i]!!))
+            drawCircle(surface, radius = 6.dp.toPx(), center = center)
+            drawCircle(color, radius = 4.dp.toPx(), center = center)
+        }
+
+        drawXLabels(labels.map { measurer.measure(it, axisStyle) }, plotLeft, slot, plotBottom)
+    }
+}
+
+/** Labels under the plot: as many as fit without touching, always including the most recent. */
+private fun DrawScope.drawXLabels(measured: List<TextLayoutResult>, plotLeft: Float, slot: Float, plotBottom: Float) {
+    if (measured.isEmpty()) return
+    val widest = measured.maxOf { it.size.width } + 8.dp.toPx()
+    val every = ceil(widest / slot).toInt().coerceAtLeast(1)
+    measured.forEachIndexed { index, label ->
+        if ((measured.lastIndex - index) % every != 0) return@forEachIndexed
+        val center = plotLeft + slot * (index + 0.5f)
+        val x = (center - label.size.width / 2f).coerceIn(0f, size.width - label.size.width)
+        drawText(label, topLeft = Offset(x, plotBottom + 6.dp.toPx()))
+    }
+}
+
+/** Parts of a whole as one bar, split by 2dp gaps; label the parts beside it (it carries no text). */
+@Composable
+fun ProportionBar(parts: List<Pair<Int, Color>>, description: String, modifier: Modifier = Modifier, height: Dp = 20.dp) {
+    val shown = parts.filter { it.first > 0 }
+    Row(
+        modifier = modifier.fillMaxWidth().height(height).clearAndSetSemantics { contentDescription = description },
+        horizontalArrangement = Arrangement.spacedBy(SegmentGap),
+    ) {
+        shown.forEachIndexed { i, (value, color) ->
+            val shape = RoundedCornerShape(
+                topStart = if (i == 0) BarRadius else 0.dp,
+                bottomStart = if (i == 0) BarRadius else 0.dp,
+                topEnd = if (i == shown.lastIndex) BarRadius else 0.dp,
+                bottomEnd = if (i == shown.lastIndex) BarRadius else 0.dp,
+            )
+            Box(Modifier.weight(value.toFloat()).fillMaxHeight().background(color, shape))
         }
     }
 }
 
-/** One horizontal bar per row with its value at the tip; a single series, so no legend. */
+/**
+ * One horizontal bar per row with its value at the tip; a single series, so no legend. Bars are
+ * scaled to [max], or to the largest value. [labelAbove] puts long labels on their own line.
+ */
 @Composable
-fun HorizontalBarChart(rows: List<Pair<String, Int>>, color: Color, unit: (Int) -> String, modifier: Modifier = Modifier) {
-    val max = rows.maxOfOrNull { it.second }?.coerceAtLeast(1) ?: 1
+fun HorizontalBarChart(
+    rows: List<Pair<String, Int>>,
+    color: Color,
+    unit: (Int) -> String,
+    modifier: Modifier = Modifier,
+    max: Int? = null,
+    valueText: (Int) -> String = { it.toString() },
+    labelAbove: Boolean = false,
+) {
+    val top = (max ?: rows.maxOfOrNull { it.second } ?: 1).coerceAtLeast(1)
     Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         rows.forEach { (label, value) ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clearAndSetSemantics { contentDescription = "$label, ${unit(value)}" },
-            ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.width(112.dp).padding(end = 8.dp),
-                )
-                BoxWithConstraints(Modifier.weight(1f)) {
-                    val valueSpace = 36.dp
-                    val barWidth = ((maxWidth - valueSpace) * (value.toFloat() / max)).coerceAtLeast(2.dp)
+            val labelText: @Composable (Modifier) -> Unit = { m ->
+                Text(label, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = m)
+            }
+            val bar: @Composable (Modifier) -> Unit = { m ->
+                BoxWithConstraints(m) {
+                    val valueSpace = 44.dp
+                    val barWidth = ((maxWidth - valueSpace) * (value.toFloat() / top).coerceIn(0f, 1f)).coerceAtLeast(2.dp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             Modifier
@@ -221,11 +343,24 @@ fun HorizontalBarChart(rows: List<Pair<String, Int>>, color: Color, unit: (Int) 
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            value.toString(),
+                            valueText(value),
                             style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
+                }
+            }
+            val semantics = Modifier.clearAndSetSemantics { contentDescription = "$label, ${unit(value)}" }
+            if (labelAbove) {
+                Column(semantics, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    labelText(Modifier)
+                    bar(Modifier.fillMaxWidth())
+                }
+            } else {
+                Row(semantics, verticalAlignment = Alignment.CenterVertically) {
+                    labelText(Modifier.width(112.dp).padding(end = 8.dp))
+                    bar(Modifier.weight(1f))
                 }
             }
         }

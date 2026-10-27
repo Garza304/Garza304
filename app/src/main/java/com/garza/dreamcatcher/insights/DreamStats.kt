@@ -41,6 +41,12 @@ data class Summary(val days: Int, val recorded: Int, val dream: Int, val nightma
     val nightmarePercent: Int? get() = if (recalled == 0) null else Math.round(nightmare * 100f / recalled)
 }
 
+/** Recall split by how the morning started: [alarm] mornings had an entry started from a ringing alarm. */
+data class WakeComparison(val ownMornings: Int, val ownRecalled: Int, val alarmMornings: Int, val alarmRecalled: Int) {
+    val ownPercent: Int? get() = if (ownMornings == 0) null else Math.round(ownRecalled * 100f / ownMornings)
+    val alarmPercent: Int? get() = if (alarmMornings == 0) null else Math.round(alarmRecalled * 100f / alarmMornings)
+}
+
 /** A tag and how many entries carry it. [builtIn] is set for Lucid and Recurring. */
 data class TagCount(val label: String, val count: Int, val builtIn: DreamTag? = null)
 
@@ -189,6 +195,77 @@ object DreamStats {
         for (day in 1..month.lengthOfMonth()) cells += month.atDay(day)
         while (cells.size % 7 != 0) cells += null
         return cells
+    }
+
+    /** The period of the same length just before [from]..[to], for "compared with before" figures. */
+    fun previousRange(from: LocalDate, to: LocalDate): Pair<LocalDate, LocalDate> {
+        val days = ChronoUnit.DAYS.between(from, to) + 1
+        return from.minusDays(days) to from.minusDays(1)
+    }
+
+    fun wordCount(text: String): Int = text.split(Regex("\\s+")).count { it.any(Char::isLetterOrDigit) }
+
+    /** Average words per written entry (entries with no words are left out), or null with none. */
+    fun averageWords(dreams: List<Dream>): Int? {
+        val counts = dreams.map { wordCount(it.text) }.filter { it > 0 }
+        return if (counts.isEmpty()) null else Math.round(counts.average()).toInt()
+    }
+
+    fun longestWords(dreams: List<Dream>): Int = dreams.maxOfOrNull { wordCount(it.text) } ?: 0
+
+    /**
+     * Columns of [weeks] weeks ending with the week holding [today], each starting on
+     * [firstDayOfWeek]. Days after today are null.
+     */
+    fun weekColumns(today: LocalDate, weeks: Int, firstDayOfWeek: DayOfWeek): List<List<LocalDate?>> {
+        val lastWeekStart = today.with(TemporalAdjusters.previousOrSame(firstDayOfWeek))
+        return (weeks - 1 downTo 0).map { back ->
+            val start = lastWeekStart.minusWeeks(back.toLong())
+            (0L until 7L).map { start.plusDays(it).takeIf { day -> day <= today } }
+        }
+    }
+
+    /** Recall on mornings you woke by yourself vs. mornings an alarm woke you, within [from]..[to]. */
+    fun wakeComparison(dreams: List<Dream>, from: LocalDate, to: LocalDate, zone: ZoneId = ZoneId.systemDefault()): WakeComparison {
+        var own = 0; var ownRecalled = 0; var alarm = 0; var alarmRecalled = 0
+        dreams.groupBy { dayOf(it.createdAt, zone) }
+            .filterKeys { it in from..to }
+            .values
+            .forEach { entries ->
+                val recalled = entries.minOf(::kindOf) != NightKind.NO_DREAM
+                if (entries.any { it.fromAlarm }) {
+                    alarm++
+                    if (recalled) alarmRecalled++
+                } else {
+                    own++
+                    if (recalled) ownRecalled++
+                }
+            }
+        return WakeComparison(own, ownRecalled, alarm, alarmRecalled)
+    }
+
+    /** Recall percentage per bucket, or null for a bucket with nothing recorded. */
+    fun recallPercents(buckets: List<Bucket>): List<Int?> =
+        buckets.map { if (it.total == 0) null else Math.round((it.dream + it.nightmare) * 100f / it.total) }
+
+    /** How many entries were written in each hour of the day, index 0 to 23. */
+    fun byHour(dreams: List<Dream>, zone: ZoneId = ZoneId.systemDefault()): List<Int> {
+        val counts = IntArray(24)
+        dreams.forEach { counts[Instant.ofEpochMilli(it.createdAt).atZone(zone).hour]++ }
+        return counts.toList()
+    }
+
+    /** The hours worth charting: the first to the last hour with entries, widened evenly to at least [minSpan]. */
+    fun activeHours(counts: List<Int>, minSpan: Int = 6): IntRange {
+        val first = counts.indexOfFirst { it > 0 }
+        if (first < 0) return 5..10
+        var start = first
+        var end = counts.indexOfLast { it > 0 }
+        while (end - start + 1 < minSpan) {
+            if (end < 23) end++
+            if (end - start + 1 < minSpan && start > 0) start--
+        }
+        return start..end
     }
 
     /** Up to five evenly spaced, round axis values from 0 that cover [max]. */

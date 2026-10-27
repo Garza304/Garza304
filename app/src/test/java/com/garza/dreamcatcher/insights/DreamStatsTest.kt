@@ -141,3 +141,77 @@ class DreamStatsTest {
         assertEquals(listOf(0, 10, 20, 30, 40), DreamStats.axisTicks(31))
     }
 }
+
+class DreamStatsMoreTest {
+
+    private val zone = ZoneOffset.UTC
+
+    private fun d(s: String) = LocalDate.parse(s)
+
+    private fun entry(date: String, hour: Int = 7, text: String = "A dream", fromAlarm: Boolean = false, vararg tags: DreamTag) =
+        Dream(
+            text = text,
+            createdAt = LocalDate.parse(date).atTime(hour, 0).toInstant(zone).toEpochMilli(),
+            tags = tags.toSet(),
+            fromAlarm = fromAlarm,
+        )
+
+    @Test
+    fun previousRangeHasTheSameLength() {
+        assertEquals(d("2026-08-29") to d("2026-09-27"), DreamStats.previousRange(d("2026-09-28"), d("2026-10-27")))
+    }
+
+    @Test
+    fun wordsAreCountedIgnoringPunctuation() {
+        assertEquals(5, DreamStats.wordCount("I was  flying — over\nwater."))
+        assertEquals(0, DreamStats.wordCount("  "))
+        val dreams = listOf(entry("2026-10-01", text = "one two three"), entry("2026-10-02", text = "one"), entry("2026-10-03", text = ""))
+        assertEquals(2, DreamStats.averageWords(dreams))
+        assertEquals(3, DreamStats.longestWords(dreams))
+        assertNull(DreamStats.averageWords(emptyList()))
+    }
+
+    @Test
+    fun weekColumnsEndWithThisWeekAndHideTheFuture() {
+        // 27 Oct 2026 is a Tuesday.
+        val columns = DreamStats.weekColumns(d("2026-10-27"), 3, DayOfWeek.MONDAY)
+        assertEquals(3, columns.size)
+        assertEquals(d("2026-10-12"), columns.first().first())
+        assertEquals(listOf(d("2026-10-26"), d("2026-10-27"), null, null, null, null, null), columns.last())
+    }
+
+    @Test
+    fun wakeComparisonSplitsMorningsByAlarm() {
+        val dreams = listOf(
+            entry("2026-10-01", fromAlarm = true, tags = arrayOf(DreamTag.DREAM)),
+            entry("2026-10-02", fromAlarm = true, text = "", tags = arrayOf(DreamTag.NO_DREAM)),
+            entry("2026-10-03", tags = arrayOf(DreamTag.NIGHTMARE)),
+            // Woke early with nothing, then the alarm rang: an alarm morning, and a dream was remembered.
+            entry("2026-10-04", hour = 4, text = "", tags = arrayOf(DreamTag.NO_DREAM)),
+            entry("2026-10-04", hour = 7, fromAlarm = true, tags = arrayOf(DreamTag.DREAM)),
+            entry("2026-11-01", tags = arrayOf(DreamTag.DREAM)), // outside the range
+        )
+        val c = DreamStats.wakeComparison(dreams, d("2026-10-01"), d("2026-10-31"), zone)
+        assertEquals(WakeComparison(ownMornings = 1, ownRecalled = 1, alarmMornings = 3, alarmRecalled = 2), c)
+        assertEquals(100, c.ownPercent)
+        assertEquals(67, c.alarmPercent)
+    }
+
+    @Test
+    fun recallPercentsSkipEmptyBuckets() {
+        val buckets = listOf(
+            Bucket(d("2026-10-01"), d("2026-10-07"), dream = 3, nightmare = 1, noDream = 1),
+            Bucket(d("2026-10-08"), d("2026-10-14"), dream = 0, nightmare = 0, noDream = 0),
+        )
+        assertEquals(listOf(80, null), DreamStats.recallPercents(buckets))
+    }
+
+    @Test
+    fun hoursAreCountedAndTrimmedToTheActiveSpan() {
+        val counts = DreamStats.byHour(listOf(entry("2026-10-01", hour = 6), entry("2026-10-02", hour = 7), entry("2026-10-03", hour = 7)), zone)
+        assertEquals(2, counts[7])
+        assertEquals(4..9, DreamStats.activeHours(counts))
+        assertEquals(18..23, DreamStats.activeHours(List(24) { if (it == 23) 1 else 0 }))
+        assertEquals(3..9, DreamStats.activeHours(List(24) { if (it == 3 || it == 9) 1 else 0 }))
+    }
+}

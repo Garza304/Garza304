@@ -37,15 +37,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.garza.dreamcatcher.Settings
 import com.garza.dreamcatcher.data.Alarm
 import com.garza.dreamcatcher.dream.DreamEntryActivity
 import com.garza.dreamcatcher.ui.alarms.AlarmEditDialog
 import com.garza.dreamcatcher.ui.alarms.AlarmsScreen
 import com.garza.dreamcatcher.ui.alarms.AlarmsViewModel
+import com.garza.dreamcatcher.ui.insights.InsightsActions
 import com.garza.dreamcatcher.ui.insights.InsightsScreen
 import com.garza.dreamcatcher.ui.insights.InsightsViewModel
 import com.garza.dreamcatcher.ui.journal.JournalScreen
 import com.garza.dreamcatcher.ui.journal.JournalViewModel
+import com.garza.dreamcatcher.ui.journal.TagFilter
 import com.garza.dreamcatcher.ui.theme.DreamcatcherTheme
 import kotlinx.coroutines.launch
 
@@ -165,12 +168,23 @@ private fun MainScreen() {
             }
             Tab.Insights -> {
                 val state by insights.state.collectAsStateWithLifecycle()
+                val style by Settings.insightsStyle.collectAsStateWithLifecycle()
                 InsightsScreen(
+                    style = style,
                     state = state,
-                    onMonthChange = insights::showMonth,
-                    onSelectDay = insights::selectDay,
-                    onRangeChange = { insights.range.value = it },
-                    onOpen = { context.startActivity(DreamEntryActivity.editIntent(context, it.id)) },
+                    actions = InsightsActions(
+                        onMonthChange = insights::showMonth,
+                        onSelectDay = insights::selectDay,
+                        onRangeChange = insights::setRange,
+                        onOpen = { context.startActivity(DreamEntryActivity.editIntent(context, it.id)) },
+                        onTag = { tag ->
+                            journal.query.value = ""
+                            journal.tagFilter.value = tag.builtIn?.let { TagFilter.BuiltIn(it) } ?: TagFilter.Custom(tag.label)
+                            tab = Tab.Journal.ordinal
+                        },
+                        onDigestMonthly = insights::setDigestMonthly,
+                        onDigestStep = insights::stepDigest,
+                    ),
                     contentPadding = padding,
                 )
             }
