@@ -43,7 +43,6 @@ import com.garza.dreamcatcher.ui.ChipRow
 import com.garza.dreamcatcher.ui.ChipSpec
 import com.garza.dreamcatcher.ui.CustomTagIcon
 import com.garza.dreamcatcher.ui.icon
-import com.garza.dreamcatcher.ui.theme.Moon
 
 @Composable
 fun JournalScreen(
@@ -162,9 +161,9 @@ private fun DreamCard(dream: Dream, onClick: () -> Unit) {
 @Composable
 private fun TagLabel(label: String, icon: ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, tint = Moon, modifier = Modifier.size(14.dp))
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(14.dp))
         Spacer(Modifier.width(4.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Moon)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
     }
 }
 
@@ -175,7 +174,7 @@ private fun EmptyState(message: String) {
             Icon(
                 Icons.Filled.NightsStay,
                 contentDescription = null,
-                tint = Moon,
+                tint = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(56.dp),
             )
             Spacer(Modifier.height(16.dp))

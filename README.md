@@ -25,6 +25,9 @@ also type. Each entry is saved to a journal you can search, filter by tag, edit,
 - **Woke up before the alarm?** Start a recording from the lock screen without unlocking. Use the **Record dream**
   Quick Settings tile, or turn on the silent lock screen shortcut notification. Both are set up from the card at the
   bottom of the Alarms tab.
+- **Color schemes**: 17 to choose from in Settings, 11 dark and 6 light. They include True black for OLED screens,
+  plus Red light and Amber glow, which are easy on night-adjusted eyes. A unit test checks every scheme's text against
+  WCAG AA contrast.
 - **Privacy on the lock screen**: only the new-entry screen shows over the lock screen. The journal needs an unlocked
   phone.
 - **Journal**: newest first, with search, a tag filter, and editing. **Share** exports the whole journal as plain text.

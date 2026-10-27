@@ -14,6 +14,7 @@ class DreamcatcherApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Settings.load(this)
         createNotificationChannels()
         WakeUpShortcut.refreshNotification(this)
     }

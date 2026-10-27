@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.sp
 import com.garza.dreamcatcher.alarm.AlarmTime
 import com.garza.dreamcatcher.data.Alarm
 import com.garza.dreamcatcher.data.days
-import com.garza.dreamcatcher.ui.theme.Moon
 import java.time.ZonedDateTime
 import kotlinx.coroutines.delay
 
@@ -129,7 +128,7 @@ private fun AlarmCard(
 private fun EmptyAlarms() {
     Box(Modifier.fillMaxWidth().padding(top = 64.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Filled.Alarm, contentDescription = null, tint = Moon, modifier = Modifier.size(56.dp))
+            Icon(Icons.Filled.Alarm, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(56.dp))
             Spacer(Modifier.height(16.dp))
             Text(
                 "No alarms yet.\nAdd one and Dreamcatcher will ask about your dreams the moment you wake.",

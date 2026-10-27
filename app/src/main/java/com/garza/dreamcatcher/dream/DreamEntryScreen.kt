@@ -74,7 +74,6 @@ import com.garza.dreamcatcher.ui.ChipSpec
 import com.garza.dreamcatcher.ui.CustomTagIcon
 import com.garza.dreamcatcher.ui.NewTagDialog
 import com.garza.dreamcatcher.ui.icon
-import com.garza.dreamcatcher.ui.theme.Moon
 
 private val KINDS = listOf(DreamTag.DREAM, DreamTag.NIGHTMARE, DreamTag.NO_DREAM)
 private val EXTRAS = DreamTag.entries.filterNot { it.isKind }
@@ -328,7 +327,7 @@ private fun QuestionCard(
                 Surface(
                     onClick = onMic,
                     shape = CircleShape,
-                    color = if (micActive) Moon else Color.Transparent,
+                    color = if (micActive) colors.secondary else Color.Transparent,
                     contentColor = if (micActive) colors.onSecondary else colors.onSurface,
                     border = if (micActive) null else BorderStroke(1.dp, colors.outline),
                     modifier = Modifier.size(44.dp),
@@ -414,7 +413,7 @@ fun ReviewScreen(
                 },
                 fontFamily = FontFamily.Serif,
                 fontSize = 32.sp,
-                color = Moon,
+                color = colors.secondary,
                 modifier = Modifier.weight(1f),
             )
             if (!isNew) {

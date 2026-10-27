@@ -37,8 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.garza.dreamcatcher.dream.DreamEntryActivity
 import com.garza.dreamcatcher.ui.theme.DreamcatcherTheme
-import com.garza.dreamcatcher.ui.theme.Moon
-import com.garza.dreamcatcher.ui.theme.NightSky
+import com.garza.dreamcatcher.ui.theme.nightSkyBrush
 import java.time.LocalTime
 import kotlinx.coroutines.delay
 
@@ -93,7 +92,7 @@ private fun RingScreen(label: String, is24Hour: Boolean, onRecord: () -> Unit, o
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(NightSky)
+            .background(nightSkyBrush())
             .safeDrawingPadding()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -101,13 +100,13 @@ private fun RingScreen(label: String, is24Hour: Boolean, onRecord: () -> Unit, o
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.height(48.dp))
-            Icon(Icons.Filled.Bedtime, contentDescription = null, tint = Moon, modifier = Modifier.size(64.dp))
+            Icon(Icons.Filled.Bedtime, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(64.dp))
             Spacer(Modifier.height(24.dp))
             Text(
                 AlarmTime.formatTime(now.hour, now.minute, is24Hour),
                 fontSize = 72.sp,
                 fontWeight = FontWeight.Light,
-                color = Moon,
+                color = MaterialTheme.colorScheme.secondary,
             )
             Text(
                 label.ifBlank { "Good morning" },
